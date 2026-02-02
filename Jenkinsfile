@@ -35,7 +35,12 @@ pipeline {
             steps {
                 retry(10) {
                     sleep 15
-                    sh 'curl -f http://frontend:3000/ || curl -f http://localhost:3000/'
+                    sh """
+                        CONTAINER_ID=\$(docker compose -f ${COMPOSE_FILE} ps -q frontend)
+                        STATUS=\$(docker inspect --format='{{.State.Health.Status}}' "\$CONTAINER_ID")
+                        echo "Frontend health status: \$STATUS"
+                        [ "\$STATUS" = "healthy" ]
+                    """
                 }
             }
         }
